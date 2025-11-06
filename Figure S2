@@ -1,0 +1,210 @@
+library(Seurat)
+library(tidyverse)
+library(EnhancedVolcano)
+
+# download gut_temporal_gdTcells_processed.rds from here: https://drive.google.com/drive/folders/1EWbUZrY9am-fp6OK6hSwn5LkSeahgUv2?usp=drive_link
+# figure aesthetics were further modified using Adobe Illustrator
+
+gut_gdT_obj <- readRDS("gut_temporal_gdTcells_processed.rds")
+gut_gdT_Vg6_obj <- subset(x = gut_gdT_obj, subset = `Trgv6` > 0)
+gut_gdT_Vg4_obj <- subset(x = gut_gdT_obj, subset = `Trgv4` > 0)
+
+
+# Figure S2A
+Idents(object = gut_gdT_Vg6_obj) <- "timepoint"
+DEG_vg6_d0vsd7 <- FindMarkers(gut_gdT_Vg6_obj, ident.1 = "Wk1", ident.2 = "Wk0", min.pct = 0.25)
+genes_vg6_d0vsd7 <- c("Il22", "Bhlhe40", "Jun", "Dusp4", "Tmem176b", "Cd226", "Cd69", "Tnf", "Icam1", "Fosb", "Cxcl10", "Nr4a1", "Litaf", "Btg2", 
+                      "Junb", "Nr4a3", "Il2ra", "Isg15", "Tmem176a", "Nr4a2", "Dusp1", "Cd96", "Rora", "P2rx7", "Nfatc1", "Il1r1", "Jund", "Il18r1", 
+                      "Btg1", "Fos", "Cxcr6", "Klf2", "Ccr9", "Mif", "S100a6","Pdcd1", "S1pr1", "S100a4", "Itgae")
+EnhancedVolcano(DEG_vg6_d0vsd7,
+                        lab = rownames(DEG_vg6_d0vsd7),
+                        x = 'avg_log2FC',
+                        y = 'p_val_adj',
+                        selectLab = genes_vg6_d0vsd7,
+                        xlab = bquote(~Log[2]~ 'fold change'),
+                        pCutoff = 0.05,
+                        FCcutoff = 1.0,
+                        pointSize = 4.0,
+                        labSize = 4.0,
+                        labCol = 'black',
+                        colAlpha = 1,
+                        legendPosition = 'right',
+                        legendLabSize = 14,
+                        legendIconSize = 4.0,
+                        drawConnectors = TRUE,
+                        widthConnectors = 1.0,
+                        colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + xlim(-6, 6)
+
+DEG_vg6_d7vsd21 <- FindMarkers(gut_gdT_Vg6_obj, ident.1 = "Wk3", ident.2 = "Wk1", min.pct = 0.25)
+genes_vg6_d7vsd21 <- c("Gzmb", "Irak3", "Tnfrsf9", "Gimap6", "Stat3", "Hif1a", "Bach2", "Irf7", "Foxo1", "Gzmc", "Ccr5", 
+                       "Stat5a", "Tnfrsf1a", "Stat5b", "Fos", "Nr4a2", "Cxcl10", "Cd226", "Socs1", 
+                       "Dusp1", "Icam1", "Fosb", "Nr4a1", "Dusp4", "Cd160", "Tnf", "Btg2", "Rorc")
+EnhancedVolcano(DEG_vg6_d7vsd21,
+                lab = rownames(DEG_vg6_d7vsd21),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                selectLab = genes_vg6_d7vsd21,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 1.0,
+                pointSize = 4.0,
+                labSize = 4.0,
+                labCol = 'black',
+                colAlpha = 1,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1.0,
+                colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + xlim(-3, 3)
+
+DEG_vg6_d21vsd42 <- FindMarkers(gut_gdT_Vg6_obj, ident.1 = "Wk6", ident.2 = "Wk3", min.pct = 0.25)
+genes_vg6_d21vsd42 <- c("Cxcl10", "Ptgs2", "Il17a", "Csf2", "Il22", "Traf1", "Icam1", 
+                        "Tnf", "Stat1", "Nr4a1", "Bhlhe40", "Nlrc5", "Tnfsf14", "Gzmb")
+EnhancedVolcano(DEG_vg6_d21vsd42,
+                lab = rownames(DEG_vg6_d21vsd42),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                selectLab = genes_vg6_d21vsd42,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 1.0,
+                pointSize = 4.0,
+                labSize = 4.0,
+                labCol = 'black',
+                colAlpha = 1,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1.0,
+                colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + xlim(-2.5, 4)
+
+
+# Figure S2B
+Idents(object = gut_gdT_Vg4_obj) <- "timepoint"
+DEG_Vg4_d0vsd7 <- FindMarkers(gut_gdT_Vg4_obj, ident.1 = "Wk1", ident.2 = "Wk0", min.pct = 0.25)
+genes_Vg4_d0vsd7 <- c("Il17a", "Bhlhe40", "Tmem176b", "Fosb", "Il2ra", "Jun", "Cd44", "Junb", "Il18r1", "Dusp1", "Maf", "Blk", 
+                      "Rorc", "Nr4a1", "Il23r", "Cxcr6", "Nr4a3", "Btg2", "Rora", "Nr4a2", "Tnfsf11", "Icos", "Runx1", "Isg15", 
+                      "Nfkb1", "Btg1", "Cd7", "Tnfrsf9", "Pdcd1", "Cd8b1", "Gzma")
+EnhancedVolcano(DEG_Vg4_d0vsd7,
+                lab = rownames(DEG_Vg4_d0vsd7),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                selectLab = genes_Vg4_d0vsd7,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 1.0,
+                pointSize = 4.0,
+                labSize = 4.0,
+                labCol = 'black',
+                colAlpha = 1,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1.0,
+                colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + xlim(-3, 5)
+
+DEG_Vg4_d7vsd21 <- FindMarkers(gut_gdT_Vg4_obj, ident.1 = "Wk3", ident.2 = "Wk1", min.pct = 0.25)
+genes_Vg4_d7vsd21 <- c("Tnfrsf9", "Cd9", "Tigit", "Tnfrsf18", "Stat3", 
+  "Cxcr6", "Ccr9", "Nr4a2", "P2rx7", "Itgae", 
+  "Dusp1", "Nr4a1", "Dusp4", "Icam1", "Fosb", "Btg2", "CD160", "Rorc")
+EnhancedVolcano(DEG_Vg4_d7vsd21,
+                lab = rownames(DEG_Vg4_d7vsd21),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                selectLab = genes_Vg4_d7vsd21,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 1.0,
+                pointSize = 4.0,
+                labSize = 4.0,
+                labCol = 'black',
+                colAlpha = 1,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1.0,
+                colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + xlim(-3, 3)
+
+DEG_Vg4_d21vsd42 <- FindMarkers(gut_gdT_Vg4_obj, ident.1 = "Wk6", ident.2 = "Wk3", min.pct = 0.25)
+genes_Vg4_d21vsd42 <- c("Gzmk", "Gzma", "Itga1", "Cd8a", "Ccl5", "Nkg7", "Gimap7", "Klrd1", 
+  "Fasl", "Litaf", "Cd7", "Cd160", "Cd96", "Themis", 
+  "Stat1", "Ccr5", "Tigit", "Icam1", "Bhlhe40", "Nlrc5", 
+  "Il12rb2", "S100a4", "Lef1", "Klf2", "Ifngr2", "S1pr1")
+EnhancedVolcano(DEG_Vg4_d21vsd42,
+                lab = rownames(DEG_Vg4_d21vsd42),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                selectLab = genes_Vg4_d21vsd42,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 1.0,
+                pointSize = 4.0,
+                labSize = 4.0,
+                labCol = 'black',
+                colAlpha = 1,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1.0,
+                colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + xlim(-2.5, 12)
+
+
+#Figure S2C
+Idents(object = gut_gdT_Vg6_obj) <- "timepoint"
+DEG_Vg6_d7vsd42 <- FindMarkers(gut_gdT_Vg6_obj, ident.1 = "Wk6", ident.2 = "Wk1", min.pct = 0.25)
+genes_Vg6_d7vsd42 <-   c("Btg2", "Nr4a2", "Cd160", "Lef1", "Ifngrr2", "Cd226", "Dusp4", "Il12rb1", "Ifngr2",
+"Dusp2", "P2rx7", "Bach1", "Cxcl10", "Gzmb", "Il21r", "Csf2", "Il22",
+"Irf7", "Ifi47", "Klrk1", "Foxo1", "Tnfrsf9", "Ptgs2", "Ly6a",
+"Nfkb2", "Il2ra", "Bach2", "Hif1a", "Bhlhe40", "Stat3", "Il2rb")
+EnhancedVolcano(DEG_Vg6_d7vsd42,
+                lab = rownames(DEG_Vg6_d7vsd42),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                selectLab = genes_Vg6_d7vsd42,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 1.0,
+                pointSize = 4.0,
+                labSize = 4.0,
+                labCol = 'black',
+                colAlpha = 1,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1.0,
+                colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + xlim(-5, 5)
+
+
+# Figure S2D
+Idents(object = gut_gdT_Vg4_obj) <- "timepoint"
+DEG_Vg4_d7vsd42 <- FindMarkers(gut_gdT_Vg4_obj, ident.1 = "Wk6", ident.2 = "Wk1", min.pct = 0.25)
+genes_Vg4_d7vsd42 <- c("Btg2", "Lef1", "Nr4a1", "Dusp1", "Rorc", "Nr4a2", "Sox4", "S1pr1",
+  "Sell", "Fosb", "Dusp10", "Ccr7", "Dusp4", "Bach1", "Il2ra", "Il12rb2",
+  "Fasl", "Cd8a", "Nkg7", "Klrd1", "Ly6a", "Itga1", "Tnfrsf9", "Tigit",
+  "Ccl5", "Bhlhe40", "Stat3", "Gzma", "Foxo1", "Ifi47", "Gzmb", "Klrk1")
+EnhancedVolcano(DEG_Vg4_d7vsd42,
+                lab = rownames(DEG_Vg4_d7vsd42),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                selectLab = genes_Vg4_d7vsd42,
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 1.0,
+                pointSize = 4.0,
+                labSize = 4.0,
+                labCol = 'black',
+                colAlpha = 1,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1.0,
+                colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + xlim(-4, 6)
+
+# Figure S2E
