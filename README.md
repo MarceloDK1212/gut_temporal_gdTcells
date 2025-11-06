@@ -1,2 +1,8 @@
 # gut_temporal_gdTcells
+
+A temporal differentiation program after birth delineates γδ T cell immunity (Baglioni et al.,)
+
+ABSTRACT
+Delineation of gamma delta (γδ) T cells into type 1 interferon(IFN)-γ producing (γδT1) and type 3 interleukin(IL)-17-producing (γδT17) starts in the embryonic thymus. Whether γδ T cells continue to differentiate after thymic exit and during their localization in peripheral tissues is not known. Herein, we provide evidence that intestinal γδT17 (Vγ4 and Vγ6) and γδT1 (Vγ4) cells undergo a dynamic temporal immunological programming from birth to adulthood. Hence, during the first week of life there was strong induction of genes associated with T cell activation and type 3 immunity, while the post-weaning period was dominated by genes related to effector function, type 1 immunity and cytotoxicity. During this period, γδ T cells could protect the neonatal gut from fungal infection. In the adult intestine, γδT17 cells had a distinct phenotype and a type 1 transcriptional and functional immune profile that depended on Tbet. We additionally show that unlike in the lymph node, intestinal γδT17 cells have an active TCR with productive signaling. Finally, we discovered a γδ T cell population in the neonatal human gut that resembles mouse intestinal γδT17 cells. Collectively, our data suggest that γδ T cells continue to mature after they leave the thymus, and upon localization to the gut they undergo through a temporal differentiation program that reshapes type 3 cells into Tbet+ type 1 effectors with heightened TCR activity.
+
 Pre-processed Seurat objects can be downloaded from https://drive.google.com/drive/folders/1EWbUZrY9am-fp6OK6hSwn5LkSeahgUv2?usp=drive_link
