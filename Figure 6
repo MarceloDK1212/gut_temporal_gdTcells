@@ -1,0 +1,74 @@
+#Figure 6 - Small Intestine sample
+
+#The following code was used to create the plots presented in figure 6 (E,F,and H)
+
+#UMAP and Marker Genes - 6E
+DimPlot(SI.object, label = TRUE)
+
+FeaturePlot(object = SI.object, 
+            features = c("MAF", "RORC", "TBX21"),
+            order = TRUE,
+            #   min.cutoff = 'q10', 
+            label = TRUE,
+            repel = TRUE,
+            keep.scale = "all", ncol = 3)
+#Extra_markers
+FeaturePlot(object = SI.object, 
+            reduction = "umap", 
+            features = c("IL7R", "KLRB1", "CCR6", "DPP4"), 
+            order = TRUE,
+            #  min.cutoff = 'q10', 
+            label = TRUE, keep.scale = "all", ncol = 4)
+#Heatmap - 6F
+cluster.averages <- AverageExpression(SI.object, assays = "SCT",  group.by = "ident", return.seurat = TRUE)
+
+head(cluster.averages[["SCT"]][, 1:7])
+
+cluster.averages$orig.ident
+
+# New cluster names
+new_names <- c("Cluster 0", "Cluster 1", "Cluster 2", "Cluster 3")
+
+# Update row values
+cluster.averages$orig.ident <- new_names
+
+#Genes of interest list
+gene_order <- c("JUNB", "NR4A2", "NR4A3", "FOSL2", "AREG", "CTLA4","ITGA1","LITAF", "FASLG", "MAF","CCL20", "BHLHE40", 
+                "SLAMF7", "RORC", "TBX21","IFNG", "PTGS2",  "NR4A1", "LIF")
+
+#Heatmap - 6H
+DoHeatmap(cluster.averages, features = gene_order, size = 5, raster = FALSE,  label = TRUE, group.by = "orig.ident",
+          draw.lines = FALSE) +  scale_fill_gradientn(colors = rev(RColorBrewer::brewer.pal(n =4, name = "RdBu"))) + guides(color = "none")
+
+
+
+#Small Intestine - Coexpression - 6G
+RORC_SI<- subset(SI.object, RORC > 0)
+
+Idents(RORC_SI) <- "SCT_snn_res.0.1"
+
+gdt_related = c("RORC", "MAF","TBX21", "CCR6", "CXCR6", "IL23R", "RORA", "DPP4", "BLK", "BHLHE40", "KLRB1","ZBTB16")
+
+percent <- Percent_Expressing(seurat_object = RORC_SI, features = gdt_related, group_by= "SCT_snn_res.0.1")
+percent_entire_object <- Percent_Expressing(seurat_object = RORC_SI, features = gdt_related, entire_object= TRUE)
+percent_entire_object <- as.data.frame(percent_entire_object)
+gene_names <- rownames(percent_entire_object)
+percentages <- percent_entire_object$All_Cells
+coexpression_data <- data.frame(Gene = gene_names, Percentage = percentages)
+coexpression_data$FillColor <- ifelse(coexpression_data$Gene == "RORC", "blue", "skyblue")
+
+
+ggplot(coexpression_data, aes(x = reorder(Gene, -Percentage), y = Percentage, fill = FillColor)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  labs(title = "human siLP",
+       x = "Genes",
+       y = "Percentage of RORC+ cells expressing selected gene") +
+  scale_fill_identity() +
+  scale_y_continuous(limits = c(0, max(coexpression_data$Percentage)), expand = c(0, 0)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        axis.line = element_line(color = "black"))  # Set axis line color to black
+
+
+
+
