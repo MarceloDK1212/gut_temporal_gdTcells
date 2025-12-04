@@ -2,10 +2,10 @@ library(Seurat)
 library(tidyverse)
 library(EnhancedVolcano)
 
-# download gut_temporal_gdTcells_processed.rds from here: https://drive.google.com/drive/folders/1EWbUZrY9am-fp6OK6hSwn5LkSeahgUv2?usp=drive_link
+# download mouse_sample.rds from here: https://drive.google.com/drive/folders/1EWbUZrY9am-fp6OK6hSwn5LkSeahgUv2?usp=drive_link
 # figure aesthetics were further modified using Adobe Illustrator
 
-gut_gdT_obj <- readRDS("gut_temporal_gdTcells_processed.rds")
+gut_gdT_obj <- readRDS("mouse_sample.rds")
 gut_gdT_Vg6_obj <- subset(x = gut_gdT_obj, subset = `Trgv6` > 0)
 gut_gdT_Vg4_obj <- subset(x = gut_gdT_obj, subset = `Trgv4` > 0)
 
