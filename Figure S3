@@ -1,0 +1,100 @@
+library(tidyverse)
+library(readxl)
+library(EnhancedVolcano)
+library(GSVA)
+library(openxlsx)
+
+# download table_wt.xlsx, sampleTable.tsv and processed_data.Rdata from here: https://drive.google.com/drive/folders/1EWbUZrY9am-fp6OK6hSwn5LkSeahgUv2?usp=drive_link
+## figure aesthetics were further modified using Adobe Illustrator
+
+
+# FIGURE S3B
+load("processed_data.Rdata")
+samples <- read.table("sampleTable.tsv", sep="\t", header = TRUE)
+expr_sub <- expr_tpm[,colnames(expr_tpm) %in% samples[samples$condition == "wt",]$sample]
+expr_sub <- expr_sub[!rowSums(expr_sub) == 0, ]
+pca <- prcomp(t(expr_sub), scale. = TRUE)
+df <- data.frame(PC1 = pca$x[,1], PC2 = pca$x[,2], organ = samples[samples$condition == "wt",]$organ, 
+                 sample = colnames(expr_sub), subset = samples[samples$condition == "wt",]$subset, 
+                 group = samples[samples$condition == "wt",]$group)
+ggplot(df, aes(x = PC1, y = PC2, color = group)) +
+  geom_point(size = 3) +
+  scale_color_manual("group", values = c(si_dp = "#FF3200", clp_dp = "#FAAA32", pln_gfp = "#0095FF", si_amcyan = 
+                                           "#CA9591", clp_amcyan = "#CA95C2", pln_amcyan = "#3600FF")) +
+  xlab(paste0("PC1 (", round(summary(pca)[[6]][2,1]*100, digits = 2), "%)")) +
+  ylab(paste0("PC2 (", round(summary(pca)[[6]][2,2]*100, digits = 2), "%)")) + theme_bw()
+
+
+# FIGURE S3C
+DEG_cluster <- read_excel("table_wt.xlsx", sheet = "2")
+DEG_cluster <- as.data.frame(DEG_cluster)
+DEG_cluster <- DEG_cluster %>% select(gene, logFC, FDR)
+genes_show <- c("Nr4a1", "Nr4a2", "Nr4a3", "Ctla4", "Fasl", "Tbx21", "Bhlhe40", "Nfkbid", "Dusp8", "Slamf7", "Areg", 
+                "Lif", "Cxcl3", "Ifng", "Il22", "Ccl20", "Tigit", "Il9r", "Sell", "Ccr10", "Ccr6", "Ccr8", "S1pr1", 
+                "Itgae", "Rarg", "P2rx7")
+EnhancedVolcano(DEG_cluster,
+                        lab = DEG_cluster$gene,
+                        x = "logFC",
+                        y = 'FDR',
+                        selectLab = genes_show,
+                        xlab = bquote(~Log[2]~ 'fold change'),
+                        pCutoff = 0.05,
+                        FCcutoff = 1.0,
+                        pointSize = 4.0,
+                        labSize = 6.0,
+                        labCol = 'black',
+                        labFace = 'bold',
+                        boxedLabels = TRUE,
+                        colAlpha = 1,
+                        legendPosition = 'right',
+                        legendLabSize = 14,
+                        legendIconSize = 4.0,
+                        drawConnectors = TRUE,
+                        widthConnectors = 1.0,
+                        colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + ylim(0, 15)
+
+
+# FIGURE S3D
+DEG_cluster <- read_excel("table_wt.xlsx", sheet = "3")
+DEG_cluster <- as.data.frame(DEG_cluster)
+DEG_cluster <- DEG_cluster %>% dplyr:::select(gene, logFC, FDR)
+genes_show <- c("Nr4a1", "Nr4a2", "Nr4a3", "Ctla4", "Fasl", "Tbx21", "Bhlhe40", "Nfkbid", "Dusp8", "Slamf7", "Areg", 
+                "Lif", "Cxcl3", "Ifng", "Il22", "Ccl20", "Tigit", "Il9r", "Sell", "Ccr10", "Ccr6", "Ccr8", "S1pr1", "Itgae", "Rarg")
+EnhancedVolcano(DEG_cluster,
+                        lab = DEG_cluster$gene,
+                        x = "logFC",
+                        y = 'FDR',
+                        selectLab = NA, #is not showing any gene name
+                        xlab = bquote(~Log[2]~ 'fold change'),
+                        pCutoff = 0.05,
+                        FCcutoff = 1.0,
+                        pointSize = 4.0,
+                        labSize = 6.0,
+                        labCol = 'black',
+                        labFace = 'bold',
+                        boxedLabels = TRUE,
+                        colAlpha = 1,
+                        legendPosition = 'right',
+                        legendLabSize = 14,
+                        legendIconSize = 4.0,
+                        drawConnectors = TRUE,
+                        widthConnectors = 1.0,
+                        colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + ylim(0, 8)
+
+
+# FIGURE S3F
+load("processed_data.Rdata")
+gdT_signature <- c("Ctla4", "Ifng", "Ptgs2", "Cxcl3", "Lif", "Il22", "Nr4a1", "Nr4a2", "Nr4a3", "Areg", "Tbx21", 
+                   "Rorc", "Maf", "Slamf7", "Fasl", "Itga1", "Junb", "Fosl2", "Bhlhe40", "Ccl20", "Osgin1", "Litaf")
+gsvaPar <- gsvaParam(exprData = expr_tpm_keep, geneSets = list(gdT = gdT_signature))
+gdT_enrich <- gsva(gsvaPar)
+gdT_enrich <- as.data.frame(gdT_enrich)
+group_names <- c("LN_gdT1", "LN_gdT17", "siLP_gdT1", "siLP_gdT17", "coLP_gdT1", "coLP_gdT17")
+gdT_enrich <- gdT_enrich %>% pivot_longer(cols = matches("[a-z][1-6]$"), names_to = "replicate", values_to = "value") %>%
+  mutate(number = as.numeric(str_extract(replicate, "[1-6]$")), group  = group_names[number]) %>% select(-number)
+cols <- c("LN_gdT17" = "#0095ff", "LN_gdT1" = "#3600ff", "coLP_gdT1" = "#ca95c2","siLP_gdT1" = "#ca9591", 
+          "coLP_gdT17" = "#faaa32", "siLP_gdT17" = "#ff3200")
+write.xlsx(gdT_enrich, "gdT_enrich.xlsx")
+ggplot(gdT_enrich, aes(x = reorder(group, value, FUN = mean), y = value, color = group)) + scale_color_manual(values = cols) +
+  geom_jitter(width = 0.15, size = 3) + theme_classic() + labs(x = "Group", y = "Value") + theme(legend.position = "none")
+# note: this figure was further modified in Adobe Illustrator and statistical significance was added using Prism
