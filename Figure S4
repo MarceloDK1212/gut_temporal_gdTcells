@@ -1,0 +1,34 @@
+library(tidyverse)
+library(readxl)
+library(EnhancedVolcano)
+
+# download table_Tbet.xlsx from here: https://drive.google.com/drive/folders/1EWbUZrY9am-fp6OK6hSwn5LkSeahgUv2?usp=drive_link
+## figure aesthetics were further modified using Adobe Illustrator
+
+
+# FIGURE S4E
+DEG_cluster <- read_excel("table_Tbet.xlsx", sheet = "7")
+DEG_cluster <- as.data.frame(DEG_cluster)
+DEG_cluster <- DEG_cluster %>% dplyr:::select(gene, logFC, FDR)
+genes_show <- c("Nr4a1", "Tbx21", "Slamf7", "Cxcr3", "Ctsw", "Itga1", "Fasl", "Nkg7", "Ccr5", "Ifng", "Xcl1", 
+                "Ccr7", "Itgae", "S1pr1", "Il17f", "Ccr6", "Ccr10", "Nrp1")
+EnhancedVolcano(DEG_cluster,
+                        lab = DEG_cluster$gene,
+                        x = "logFC",
+                        y = 'FDR',
+                        selectLab = genes_show,
+                        xlab = bquote(~Log[2]~ 'fold change'),
+                        pCutoff = 0.05,
+                        FCcutoff = 1.0,
+                        pointSize = 4.0,
+                        labSize = 6.0,
+                        labCol = 'black',
+                        labFace = 'bold',
+                        boxedLabels = TRUE,
+                        colAlpha = 1,
+                        legendPosition = 'right',
+                        legendLabSize = 14,
+                        legendIconSize = 4.0,
+                        drawConnectors = TRUE,
+                        widthConnectors = 1.0,
+                        colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + ylim(0, 13)
