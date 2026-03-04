@@ -1,81 +1,53 @@
-#Script used to create plots presented in S7
+library(Seurat)
+library(tidyverse)
+library(scCustomize)
 
-##Colon sample
-#UMAP -S7D
-DimPlot(Col.sample, label = TRUE)
-#Maker genes
-FeaturePlot(object = Col.sample, 
-            features = c("MAF", "RORC", "TBX21"),
-            order = TRUE,
-            #   min.cutoff = 'q10', 
-            label = TRUE,
-            repel = TRUE,
-            keep.scale = "all", ncol = 3)
-#Extra_markers
-FeaturePlot(object = Col.sample, 
-            reduction = "umap", 
-            features = c("IL7R", "KLRB1", "CCR6", "DPP4"), 
-            order = TRUE,
-            #  min.cutoff = 'q10', 
-            label = TRUE, keep.scale = "all", ncol = 4)
+# download COL_sample.rds from here: https://drive.google.com/drive/folders/1EWbUZrY9am-fp6OK6hSwn5LkSeahgUv2?usp=drive_link
+## figure aesthetics were further modified using Adobe Illustrator
+
+
+# FIGURE S7D
+COL_sample <- readRDS("COL_sample.rds")
+DimPlot(COL_sample, label = TRUE)
+FeaturePlot(object = COL_sample, features = "TRDV1", order = TRUE)
+FeaturePlot(object = COL_sample, features = "TRDV2", order = TRUE)
+FeaturePlot(object = COL_sample, features = "TRDV3", order = TRUE)
+FeaturePlot(object = COL_sample, features = "RORC", order = TRUE)
+FeaturePlot(object = COL_sample, features = "MAF", order = TRUE)
+FeaturePlot(object = COL_sample, features = "CCR6", order = TRUE)
+FeaturePlot(object = COL_sample, features = "KLRB1", order = TRUE)
+FeaturePlot(object = COL_sample, features = "TBX21", order = TRUE)
+
 
 #Heatmap  - S7E
-cluster.averages <- AverageExpression(Col.sample, assays = "SCT",  layer = "data", group.by = "ident", return.seurat = TRUE)
-
-head(cluster.averages[["SCT"]][, 1:7])
-
-cluster.averages$orig.ident
-
-# New cluster names
-new_names <- c("Cluster 0", "Cluster 1", "Cluster 2", "Cluster 3", "Cluster 4")
-
-# Update row values
-cluster.averages$orig.ident <- new_names
-
-# Display updated row values
-print(cluster.averages$orig.ident)
-
-
-#Heatmap with genes of interest - S7G
-DoHeatmap(cluster.averages, features = gene_order, size = 5, raster = FALSE,  label = TRUE, group.by = "orig.ident",
+cluster_markers <- FindAllMarkers(COL_sample, only.pos = TRUE, logfc.threshold = 1, min.pct = 0.25)
+top10 <- cluster_markers %>% group_by(cluster) %>% slice_head(n = 10) 
+COL_sample <- ScaleData(COL_sample, features = top10$gene)
+DoHeatmap(COL_sample, features = top10$gene, size = 5, raster = FALSE,  label = TRUE,
           draw.lines = FALSE) +  scale_fill_gradientn(colors = rev(RColorBrewer::brewer.pal(n =4, name = "RdBu"))) + guides(color = "none")
 
 
-
-
-library(scCustomize)
-
-#Colon - RORC coexpressing - S7F
-RORC_COL<- subset(Col.sample, RORC > 0)
-
+# FIGURE S7F
+RORC_COL <- subset(COL_sample, RORC > 0)
 Idents(RORC_COL) <- "SCT_snn_res.0.1"
-
-gdt_related = c("RORC", "MAF","TBX21", "CCR6", "CXCR6", "IL23R", "RORA", "DPP4", "BLK", "BHLHE40", "KLRB1","ZBTB16", "TRAV6")
-
-percent <- Percent_Expressing(seurat_object = RORC_COL, features = gdt_related, group_by= "SCT_snn_res.0.1")
-
+gdt_related = c("RORC", "MAF","TBX21", "CCR6", "CXCR6", "IL23R", "RORA", "DPP4", "BLK", "BHLHE40", "KLRB1","ZBTB16")
+percent <- Percent_Expressing(seurat_object = RORC_COL, features = gdt_related)
 percent_entire_object <- Percent_Expressing(seurat_object = RORC_COL, features = gdt_related, entire_object= TRUE)
-
 percent_entire_object <- as.data.frame(percent_entire_object)
-
-# Assuming percent_entire_object is already a data frame
 gene_names <- rownames(percent_entire_object)
 percentages <- percent_entire_object$All_Cells
-
-# Create a new data frame
 coexpression_data <- data.frame(Gene = gene_names, Percentage = percentages)
-
-# Create a new column for fill color
-coexpression_data$FillColor <- ifelse(coexpression_data$Gene == "RORC", "blue", "skyblue")
-
-# Create the plot
+coexpression_data$FillColor <- ifelse(coexpression_data$Gene == "RORC", "#ff8346", "#f8766d")
 ggplot(coexpression_data, aes(x = reorder(Gene, -Percentage), y = Percentage, fill = FillColor)) +
-  geom_bar(stat = "identity",  width = 0.7) +
-  labs(title = "human cLP",
-       x = "Genes",
-       y = "Percentage of RORC+ cells expressing selected gene") +
-  scale_fill_identity() +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels
+  geom_bar(stat = "identity", width = 0.7) +
+  labs(title = "human cLP", x = "Genes", y = "% of RORC+ γδ T cells expressing shown genes") + scale_fill_identity() +
+  scale_y_continuous(limits = c(0, max(coexpression_data$Percentage)), expand = c(0, 0)) +
+  theme_minimal() + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.line = element_line(color = "black"))
 
 
+# FIGURE S7G
+cluster.averages <- AverageExpression(COL_sample, assays = "SCT",  group.by = "ident", return.seurat = TRUE)
+gene_order <- c("JUNB", "NR4A2", "NR4A3", "FOSL2", "AREG", "CTLA4","ITGA1","LITAF", "FASLG", "MAF","CCL20", "BHLHE40", 
+                "SLAMF7", "RORC", "TBX21","IFNG", "PTGS2",  "NR4A1", "LIF")
+DoHeatmap(cluster.averages, features = gene_order, size = 5, raster = FALSE,  label = TRUE, group.by = "orig.ident",
+          draw.lines = FALSE) +  scale_fill_gradientn(colors = rev(RColorBrewer::brewer.pal(n =4, name = "RdBu"))) + guides(color = "none")
