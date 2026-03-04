@@ -1,0 +1,120 @@
+library(tidyverse)
+library(patchwork)
+library(readxl)
+library(EnhancedVolcano)
+library(GSVA)
+library(ComplexHeatmap)
+
+# download table_wt.xlsx, d0_d7_kegg.xlsx, ln_si_kegg.xlsx, table_Tbet.xlsx and processed_data.Rdata from here: https://drive.google.com/drive/folders/1EWbUZrY9am-fp6OK6hSwn5LkSeahgUv2?usp=drive_link
+## figure aesthetics were further modified using Adobe Illustrator
+
+
+# FIGURE 3A
+DEG_cluster <- read_excel("table_wt.xlsx", sheet = "1")
+DEG_cluster <- as.data.frame(DEG_cluster)
+DEG_cluster <- DEG_cluster %>% select(gene, logFC, FDR)
+genes_show <- c("Nr4a1", "Nr4a2", "Nr4a3", "Ctla4", "Fasl", "Tbx21", "Bhlhe40", "Nfkbid", "Dusp8", "Slamf7", "Areg", "Lif", 
+                "Cxcl3", "Ifng", "Il22", "Ccl20", "Tigit", "Sox4", "Nrp1", "Il9r", "Btla", "Sell", "Ccr10", "Ccr6", "Ccr8", 
+                "S1pr1", "Rarg", "Itgae", "P2rx7")
+EnhancedVolcano(DEG_cluster,
+                        lab = DEG_cluster$gene,
+                        x = "logFC",
+                        y = 'FDR',
+                        selectLab = genes_show,
+                        xlab = bquote(~Log[2]~ 'fold change'),
+                        pCutoff = 0.05,
+                        FCcutoff = 1.0,
+                        pointSize = 4.0,
+                        labSize = 6.0,
+                        labCol = 'black',
+                        labFace = 'bold',
+                        boxedLabels = TRUE,
+                        colAlpha = 1,
+                        legendPosition = 'right',
+                        legendLabSize = 14,
+                        legendIconSize = 4.0,
+                        drawConnectors = TRUE,
+                        widthConnectors = 1.0,
+                        colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + ylim(0, 15)
+
+
+# FIGURE 3D
+load("processed_data.Rdata")
+gdT_signature <- c("Ctla4", "Ifng", "Ptgs2", "Cxcl3", "Lif", "Il22", "Nr4a1", "Nr4a2", "Nr4a3", "Areg", "Tbx21", 
+                   "Rorc", "Maf", "Slamf7", "Fasl", "Itga1", "Junb", "Fosl2", "Bhlhe40", "Ccl20", "Osgin1", "Litaf")
+gsvaPar <- gsvaParam(exprData = expr_tpm_keep, geneSets = list(gdT = gdT_signature))
+gdT_enrich <- gsva(gsvaPar)
+expr_rank <- apply(expr_tpm_keep, 2, FUN = function(x) {percentile <- ecdf(x); return(percentile(x)*100)})
+rownames(expr_rank) <- rownames(expr_tpm_keep)
+expr_rank <- expr_rank[rownames(expr_rank) %in% gdT_signature, c(samples[samples$group %in% c("pln_gfp"),]$sample, samples[samples$group %in% c("pln_amcyan"),]$sample, samples[samples$group %in% c("clp_amcyan"),]$sample, samples[samples$group %in% c("si_amcyan"),]$sample, samples[samples$group %in% c("clp_dp"),]$sample, samples[samples$group %in% c("si_dp"),]$sample)]
+expr_rank <- expr_rank[complete.cases(expr_rank),]
+ca <- HeatmapAnnotation(df = data.frame(group = na.omit(samples[match(colnames(expr_rank), samples$sample) ,]$group)), annotation_legend_param = list(group = list(title = "Sample group")), col = list(group = c("si_dp" = "#FF3200", "clp_dp" = "#FAAA32", "pln_gfp" = "#0095FF", "si_amcyan" = "#CA9591", "clp_amcyan" = "#CA95C2", "pln_amcyan" = "#3600FF", "gut_d0" = "#88AB75", "gut_d7" = "#DE8F6E")))
+Heatmap(matrix = expr_rank, show_row_dend = FALSE, show_row_names = TRUE, show_column_names = FALSE, top_annotation = ca, heatmap_legend_param = list(title = "Expression\npercentile"), column_title = "gdT cell signature expression percentiles", cluster_columns = FALSE)
+
+
+# FIGURE 3E
+d0_v_d7 <- read_excel("d0_d7_kegg.xlsx")  
+siLP_v_LN <- read_excel("ln_si_kegg.xlsx")  
+d0_v_d7$dataset <- "dataset1"  
+siLP_v_LN$dataset <- "dataset2" 
+combined_data <- bind_rows(d0_v_d7, siLP_v_LN)
+combined_data_filtered <- combined_data %>% filter(pathway %in% c("KEGG_NATURAL_KILLER_CELL_MEDIATED_CYTOTOXICITY", 
+                        "KEGG_JAK_STAT_SIGNALING_PATHWAY", "KEGG_T_CELL_RECEPTOR_SIGNALING_PATHWAY", 
+                        "KEGG_CHEMOKINE_SIGNALING_PATHWAY", "KEGG_CYTOKINE_CYTOKINE_RECEPTOR_INTERACTION", 
+                        "KEGG_MAPK_SIGNALING_PATHWAY", "KEGG_PYRIMIDINE_METABOLISM", "KEGG_DNA_REPLICATION"))
+combined_data_filtered <- combined_data_filtered %>% mutate( padj_bin = case_when(
+      padj < 1e-7 ~ "<1e-7",
+      padj < 1e-6 ~ "1e-7 to 1e-6",
+      padj < 1e-5 ~ "1e-6 to 1e-5",
+      padj < 1e-4 ~ "1e-5 to 1e-4",
+      padj < 1e-3 ~ "1e-4 to 1e-3",
+      padj < 1e-2 ~ "1e-3 to 1e-2",
+      TRUE ~ ">1e-2"), dataset_padj = paste(dataset, padj_bin, sep = "_"))
+color_scale <- scale_fill_manual(values = c(
+    "dataset1_<1e-7" = "#084594",
+    "dataset1_1e-7 to 1e-6" = "#2171b5", 
+    "dataset1_1e-6 to 1e-5" = "#4292c6",
+    "dataset1_1e-5 to 1e-4" = "#6baed6",
+    "dataset1_1e-4 to 1e-3" = "#9ecae1",
+    "dataset1_1e-3 to 1e-2" = "#c6dbef",
+    "dataset1_>1e-2" = "#eff3ff",
+    "dataset2_<1e-7" = "#99000d",
+    "dataset2_1e-7 to 1e-6" = "#cb181d",
+    "dataset2_1e-6 to 1e-5" = "#ef3b2c",
+    "dataset2_1e-5 to 1e-4" = "#fb6a4a",
+    "dataset2_1e-4 to 1e-3" = "#fc9272",
+    "dataset2_1e-3 to 1e-2" = "#fcbba1",
+    "dataset2_>1e-2" = "#fee5d9"))
+ggplot(combined_data_filtered, aes(x = reorder(pathway, -NES), y = NES, fill = dataset_padj)) + 
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) + coord_flip() + 
+  labs(title = "Comparison of KEGG Pathway Enrichment", x = "Pathways", y = "NES", fill = "Dataset and p-value bin") + 
+  color_scale + theme_minimal() + theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+    axis.title.x = element_text(size = 10), legend.position = "right")
+
+
+# FIGURE 3F
+DEG_cluster <- read_excel("table_Tbet.xlsx", sheet = "6")
+DEG_cluster <- as.data.frame(DEG_cluster)
+DEG_cluster <- DEG_cluster %>% dplyr::select(gene, logFC, FDR)
+genes_show <- c("Nr4a3", "Tbx21", "Slamf7", "Cxcr3", "Ctsw", "Itga1", "Fasl", "Nkg7", "Ccr5", "Ccl4", "Ifng", "Xcl1", 
+                "Ccr7", "Itgae", "S1pr1", "Il17f", "Ccr6", "Ccr8", "Il17a", "Btla")
+EnhancedVolcano(DEG_cluster,
+                        lab = DEG_cluster$gene,
+                        x = "logFC",
+                        y = 'FDR',
+                        selectLab = genes_show,
+                        xlab = bquote(~Log[2]~ 'fold change'),
+                        pCutoff = 0.05,
+                        FCcutoff = 1.0,
+                        pointSize = 4.0,
+                        labSize = 6.0,
+                        labCol = 'black',
+                        labFace = 'bold',
+                        boxedLabels = TRUE,
+                        colAlpha = 1,
+                        legendPosition = 'right',
+                        legendLabSize = 14,
+                        legendIconSize = 4.0,
+                        drawConnectors = TRUE,
+                        widthConnectors = 1.0,
+                        colConnectors = 'black', gridlines.major = FALSE, gridlines.minor = FALSE) + ylim(0, 12.5)
